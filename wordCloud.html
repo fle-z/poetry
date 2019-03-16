@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>wordCloud</title>
+    <script src="jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript" src="d3.layout.cloud.js"></script>
+</head>
+
+<body>
+    <script>
+        var data;
+        $.ajax({
+            url: "http://127.168.0.1/poetry/Experiment/statistic.php",
+            type: 'post',
+            dataType: 'json',
+            async: false,
+            success: function(result) { //成功后的函数，注意，这里接受php返回的参数!!!!
+                console.log(result);
+                data = result;
+            },
+            error: function() { //出错处理
+                alert('数据获取失败');
+            }
+        });
+        //将object对象存为数组
+        var yix = [];
+        var times = [];
+        for(var key in data){
+            yix.push(key);
+            times.push(data[key]);
+        }
+
+        var fill = d3.scale.category20();
+
+        var layout = d3.layout.cloud()
+            .size([1200, 650])
+            .words(yix.map(function(d, i) {
+                return {
+                    text: d,
+                    size: times[i],
+                    test: "haha"
+                };
+            }))
+            .padding(5)
+            .rotate(function() {
+                return (~~(Math.random() * 6) - 3) * 30;
+            })
+            .font("Impact")
+            .fontSize(function(d) {
+                return d.size;
+            })
+            .on("end", draw);
+
+        layout.start();
+
+        function draw(words) {
+            d3.select("#layoutContainer").append("svg")
+                .attr("width", layout.size()[0])
+                .attr("height", layout.size()[1])
+                .attr("class", "wordCloud")
+                .append("g")
+                .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+                .selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .style("font-size", function(d) {
+                    return d.size + "px";
+                })
+                .style("font-family", "Impact")
+                .style("fill", function(d, i) {
+                    return fill(i);
+                })
+                .attr("text-anchor", "middle")
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) {
+                    return d.text;
+                });
+                d3.select(".wordCloud").moveToFront();
+        }
+    </script>
+</body>

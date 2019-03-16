@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>诗词意象分析</title>
+
+    <link type="text/css" rel="stylesheet" href="../css/force.css" />
+    <link type="text/css" rel="stylesheet" href="../css/pie.css" />
+    <link type="text/css" rel="stylesheet" href="../css/filter.css" />
+    <link type="text/css" rel="stylesheet" href="../bootstrap/css/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="../bootstrap/css/BootSideMenu.css" />
+    <link type="text/css" rel="stylesheet" href="../css/jquery.searchableSelect.css" />
+    <link type="text/css" rel="stylesheet" href="../css/layout.css" />
+    <link type="text/css" rel="stylesheet" href="../css/yix.css" />
+    <link type="text/css" rel="stylesheet" href="../css/heatmap.css" />
+    <style>
+        .navbar {
+            min-height: 30px;
+        }
+
+        .nav>li>a {
+            padding: 5px 15px;
+        }
+
+        .navbar-brand {
+            height: 30px;
+            padding: 5px 15px;
+        }
+
+        #filter .panel {
+            margin-bottom: 20px;
+            background-color: #333;
+            border: 1px solid #101010;
+            border-radius: 4px;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .05)
+        }
+
+        #filter .panel-heading {
+            padding: 5px 15px;
+            border-bottom: 1px solid transparent;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px
+        }
+
+        #filter .panel-default>.panel-heading {
+            color: #ddd;
+            background-color: #101010;
+            border-color: #101010
+        }
+
+        #poetryContainer .panel {
+            margin-bottom: 0;
+            border-radius: 1px;
+            border: 0;
+            border-bottom: 1px solid #101010;
+        }
+
+        #poetryContainer .panel-heading {
+            padding: 5px 15px;
+            border-bottom: 1px solid transparent;
+            border-top-left-radius: 1px;
+            border-top-right-radius: 1px;
+            cursor: pointer;
+        }
+
+        #poetryContainer .panel-default>.panel-heading {
+            color: #ddd;
+            background-color: #333;
+        }
+
+        #poetryContainer .panel-collapse {
+            width: 388px;
+            height: 150px;
+            overflow: auto;
+        }
+
+        #poetryContainer label {
+            margin-top: 5px;
+            font-size: 15px;
+            font-family: 'Roboto Condensed', sans-serif;
+            line-height: 12px;
+        }
+
+        #yixContainer{
+            overflow: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Project name</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-left">
+                    <li class="pie"><a href="#">意象与主题</a></li>
+                    <li class="force"><a href="#">意象与意象</a></li>
+                    <li class="heatmap"><a href="#">诗人与主题</a></li>
+                    <li><a href="#">Help</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="filter" class="navbar-right ">
+        <div class="panel panel-default">
+            <div class="panel-heading">朝代
+                <div class="tagit-choice active" style="float:right;margin-right:50px;">
+                    <span class="tagit-label">全选</span>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="likeform" id="nodes-form">
+                    <div id="dynasty-tagit" class="tagit">
+                        <input name="tang" type="checkbox" value="tang" checked="checked" /><label>唐诗</label>
+                        <input name="song" type="checkbox" value="song" checked="checked" /><label>宋词</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">意象筛选
+                <div class="tagit-choice active" style="float:right;margin-right:50px;">
+                    <span class="tagit-label">全选</span>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="likeform" id="nodes-form">
+                    <div id="yix-tagit" class="tagit"></div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">主题筛选
+                <div class="tagit-choice active" style="float:right;margin-right:50px;">
+                    <span class="tagit-label">全选</span>
+                </div>
+            </div>
+            <div class="panel-body">
+                <div class="likeform" id="nodes-form">
+                    <div id="emotion-tagit" class="tagit">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">意象比较</div>
+            <div class="panel-body">
+                <div class="likeform" id="nodes-form">
+                    <div id="yixCompare-tagit" class="tagit">
+                        <div class="tagit-choice active" name="1">
+                            <span class="tagit-label">查看一个意象</span>
+                        </div>
+                        <div class="tagit-choice" name="2">
+                            <span class="tagit-label">查看两个意象</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="leftView">
+        <div class="leftTop">
+            <div id="wordCloudContainer"></div>
+            <div id="layoutContainer"></div>
+        </div>
+        <div class="leftTopBottom">
+            <div id="yixContainer"></div>
+        </div>
+    </div>
+    <div class="rightView">
+        <div class="rightTop">
+            <div id="emotionContainer"></div>
+        </div>
+        <div class="rightBottom">
+            <div id="poetryContainer"></div>
+        </div>
+    </div>
+    <div class="footer"></div>
+
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.searchableSelect.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript" src="../js/d3-legend.min.js"></script>
+    <script type="text/javascript" src="../js/d3.layout.cloud.js"></script>
+    <script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
+    <script type="text/javascript" src="../bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../bootstrap/js/BootSideMenu.js"></script>
+    <script type="text/javascript" src="../js/filter.js"></script>
+    <script type="text/javascript" src="../js/pie.js"></script>
+    <script type="text/javascript" src="../js/emotion.js"></script>
+    <script type="text/javascript" src="../js/poetry.js"></script>
+    <script type="text/javascript" src="../js/yix.js"></script>
+    <script type="text/javascript" src="../js/wordCloud.js"></script>
+    <script type="text/javascript" src="../js/heatmap.js"></script>
+    <script>
+        $(document).ready(function() {
+            //最开始展示部分诗歌
+            showPoetry();
+
+            /*var loadScript;
+            init("pie");
+            //动态加载不同js文件
+            function init(main) {
+                $("#navbar > ul > li").on("click", function(){
+                        $("#layoutContainer").children().remove();
+                        $("#wordCloudContainer").children().remove();
+                        loadJS("../js/"+$(this).attr("class")+".js");
+                        loadScript.onload = function() {//加载结束之后执行回调
+                            loadScript.onload = null;
+                        }
+                });
+            }
+
+            function loadJS(url) { //加载js
+                loadScript = document.createElement("script");
+                loadScript.type = "text/javascript";
+                loadScript.src = url;
+                document.body.appendChild(loadScript);
+            }*/
+
+            //展示具体诗歌的收放功能
+            $("#poetryContainer").on("click", " .panel-heading", function() {
+                var target = $(this).attr("data-target");
+                $(target).animate({
+                    height: 'toggle'
+                });
+            });
+            //隐藏的过滤页
+            $('#filter').BootSideMenu({
+                side: "right", // left or right
+                autoClose: false // auto close when page loads
+            });
+            //朝代，诗词的选择
+            //初始时全选
+            //var data_initial = allFilter(query);
+            //点击checkbox进行过滤
+            var query = [];
+            $("#dynasty-tagit input:checkbox").change(function() {
+                query = [];
+                $('input:checkbox:checked').each(function(i) {
+                    switch ($(this).val()) {
+                        case "tang":
+                            query.push({
+                                "dynasty": "唐代"
+                            });
+                            break;
+                        case "song":
+                            query.push({
+                                "dynasty": "宋代"
+                            });
+                            break
+                    }
+                });
+
+                //data_initial = allFilter(query);
+            });
+
+            $('#emotion-tagit').on("click", "input:checkbox[name=chkItem]", function() {
+                dimension = clone(allDimension);
+                $('#emotion-tagit > input:checkbox[name=chkItem]:checked').each(function(i) {
+                    var str = $(this).val();
+                    dimension.forEach(function(d, i) {
+                        if (d.emotion == str) {
+                            dimension.splice(i, 1);
+                        }
+                    });
+                });
+
+                render(dimension);
+            });
+        })
+    </script>
+</body>
+
+</html>

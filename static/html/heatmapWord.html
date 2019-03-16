@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+
+<head>
+    <style>
+        rect.bordered {
+            stroke: #E6E6E6;
+            stroke-width: 2px;
+        }
+
+        text.mono {
+            font-size: 9pt;
+            font-family: Consolas, courier;
+            fill: #aaa;
+        }
+    </style>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript" src="https://d3js.org/queue.v1.min.js"></script>
+</head>
+
+<body>
+    <div id="chart"></div>
+    </div>
+    <script type="text/javascript">
+        var margin = {
+                top: 50,
+                right: 0,
+                bottom: 50,
+                left: 50
+            },
+            width = 960 - margin.left - margin.right,
+            height = 1040 - margin.top - margin.bottom,
+            gridSize = Math.floor(width / 50),
+            legendElementWidth = gridSize * 2,
+            buckets = 9,
+            colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"], // alternatively colorbrewer.YlGnBu[9]
+            authors = []
+        yixs = [];
+
+        queue()
+            .defer(d3.csv, "http://127.168.0.1/poetry/Data/authorSong.txt")
+            .defer(d3.json, "http://127.168.0.1/poetry/Data/yix.json")
+            .await(ready);
+
+        function ready(error, content, yixs) {
+            for (var i = 0; i < content.length; i++) {
+                authors.push(content[i]['author'].trim());
+            }
+
+            var svg = d3.select("#chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var authorLabels = svg.selectAll(".authorLabel")
+                .data(authors)
+                .enter().append("text")
+                .text(function(d) {
+                    return d;
+                })
+                .attr("x", 0)
+                .attr("y", function(d, i) {
+                    return i * gridSize;
+                })
+                .style("text-anchor", "end")
+                .attr("transform", "translate(-6," + 2*gridSize/3 + ")")
+                .attr("class", "authorLabel mono axis");
+
+            var yixLabels = svg.selectAll(".yixLabel")
+                .data(yixs)
+                .enter().append("text")
+                .text(function(d) {
+                    return d;
+                })
+                .attr("x", function(d, i) {
+                    return i * gridSize;
+                })
+                .attr("y", 0)
+                .style("text-anchor", "middle")
+                .attr("transform", "translate(" + gridSize/2 + ", -6)")
+                .attr("class", "yixLabel mono axis");
+
+            var normalizeData = function(data) {
+                var normalizationScales = {};
+                yixs.forEach(function(yix) {
+                    normalizationScales[yix] = d3.scale.linear().domain(d3.extent(data.map(function(d, i) {
+                        if (d['yix'] == yix) {
+                            return d['size'];
+                        }
+                    }))).range([0, 10]);
+                });
+
+                data.forEach(function(d) {
+                    d['value'] = normalizationScales[d['yix']](d['size']);
+                });
+
+                return data;
+            }
+
+            d3.json("../../Data/authorYixSong.json",
+                function(error, data) {
+                    var data = normalizeData(data);
+                    var colorScale = d3.scale.quantile()
+                        .domain([0, buckets - 1, d3.max(data, function(d) {
+                            return d.value;
+                        })])
+                        .range(colors);
+
+                    var cards = svg.selectAll(".yix")
+                        .data(data);
+
+                    cards.append("title");
+
+                    var getPosition = function(tmp, yix) {
+                        for (var i = 0; i < tmp.length; i++) {
+                            if (tmp[i] == yix)
+                                return i;
+                        }
+                    }
+
+                    cards.enter().append("rect")
+                        .attr("x", function(d, i) {
+                            return getPosition(yixs, d.yix) * gridSize;
+                        })
+                        .attr("y", function(d, i) {
+                            return getPosition(authors, d.author) * gridSize;
+                        })
+                        .attr("rx", 4)
+                        .attr("ry", 4)
+                        .attr("class", "yix bordered")
+                        .attr("width", gridSize)
+                        .attr("height", gridSize)
+                        .style("fill", colors[0]);
+
+                    cards.transition().duration(1000)
+                        .style("fill", function(d) {
+                            return colorScale(d.value);
+                        });
+
+                    cards.select("title").text(function(d) {
+                        return d.value_normalized;
+                    });
+
+                    cards.exit().remove();
+
+                    var legend = svg.selectAll(".legend")
+                        .data([0].concat(colorScale.quantiles()), function(d) {
+                            return d;
+                        });
+
+                    legend.enter().append("g")
+                        .attr("class", "legend");
+
+                    legend.append("rect")
+                        .attr("x", function(d, i) {
+                            return legendElementWidth * i;
+                        })
+                        .attr("y", height)
+                        .attr("width", legendElementWidth)
+                        .attr("height", gridSize)
+                        .style("fill", function(d, i) {
+                            return colors[i];
+                        });
+
+                    legend.append("text")
+                        .attr("class", "mono")
+                        .text(function(d) {
+                            return "≥ " + Math.round(d);
+                        })
+                        .attr("x", function(d, i) {
+                            return legendElementWidth * i;
+                        })
+                        .attr("y", height + gridSize);
+
+                    legend.exit().remove();
+
+                });
+        };
+    </script>
+</body>
+
+</html>

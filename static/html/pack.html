@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="../css/pack.css" />
+    <style type="text/css">
+        text {
+            font-size: 11px;
+            pointer-events: none;
+        }
+
+        text.parent {
+            fill: #1f77b4;
+        }
+
+        circle {
+            fill: #ccc;
+            stroke: #999;
+            pointer-events: all;
+        }
+
+        circle.parent {
+            fill: #1f77b4;
+            fill-opacity: .1;
+            stroke: steelblue;
+        }
+
+        circle:hover {
+            stroke: #ff7f0e;
+            stroke-width: .5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="pack"></div>
+    <div id="catalogue"></div>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript">
+        function pack() {
+            var chart = {};
+            var w = 960,
+                h = 600,
+                r = 600,
+                x = d3.scale.linear().range([0, r]),
+                y = d3.scale.linear().range([0, r]),
+                vis,
+                node;
+
+            chart.render = function() {
+                if (!vis) {
+                    vis = d3.select("#pack").append("svg")
+                        .attr("width", w)
+                        .attr("height", h)
+                        .append("svg:g")
+                        .attr("transform", "translate(" + (w - r) / 2 + "," + (h - r) / 2 + ")");
+                }
+
+                var pack = d3.layout.pack()
+                    .size([r, r])
+                    .value(function(d) {
+                        return d.size;
+                    });
+
+                d3.select(window).on("click", function() {
+                    zoom(node);
+                });
+
+                var nodes = pack.nodes(node);
+                console.log(nodes);
+
+                renderCircles(nodes);
+                renderLabels(nodes);
+            }
+
+            function renderCircles(nodes) {
+                vis.selectAll("circle")
+                    .data(nodes)
+                    .enter().append("svg:circle")
+                    .attr("class", function(d) {
+                        return d.children ? "parent" : "child";
+                    })
+                    .attr("cx", function(d) {
+                        return d.x;
+                    })
+                    .attr("cy", function(d) {
+                        return d.y;
+                    })
+                    .attr("r", function(d) {
+                        return d.r;
+                    })
+                    .on("click", function(d) {
+                        return zoom(node == d ? node : d);
+                    })
+
+                d3.selectAll(".child").append("title")
+                    .text(function(d) {
+                        if(d.r < 15 && d.r < 5){
+                            return d.name;
+                        }
+                    });
+            }
+
+            function renderLabels(nodes) {
+                vis.selectAll("text")
+                    .data(nodes)
+                    .enter().append("svg:text")
+                    .attr("class", function(d) {
+                        return d.children ? "parent" : "child";
+                    })
+                    .attr("x", function(d) {
+                        return d.x;
+                    })
+                    .attr("y", function(d) {
+                        return d.y;
+                    })
+                    .attr("dy", ".35em")
+                    .attr("text-anchor", "middle")
+                    .style("opacity", function(d) {
+                        return d.r > 15 ? 1 : 0;
+                    })
+                    .text(function(d) {
+                        return d.name;
+                    });
+            }
+
+            function zoom(d, i) {
+                var k = r / d.r / 2;
+                x.domain([d.x - d.r, d.x + d.r]);
+                y.domain([d.y - d.r, d.y + d.r]);
+
+                var t = vis.transition()
+                    .duration(d3.event.altKey ? 7500 : 750);
+
+                t.selectAll("circle")
+                    .attr("cx", function(d) {
+                        return x(d.x);
+                    })
+                    .attr("cy", function(d) {
+                        return y(d.y);
+                    })
+                    .attr("r", function(d) {
+                        return k * d.r;
+                    });
+
+                t.selectAll("text")
+                    .attr("x", function(d) {
+                        return x(d.x);
+                    })
+                    .attr("y", function(d) {
+                        return y(d.y);
+                    })
+                    .style("opacity", function(d) {
+                        return k * d.r > 15 ? 1 : 0;
+                    });
+
+                node = d;
+                d3.event.stopPropagation();
+            }
+
+            chart.width = function(w) {
+                if (!arguments.length) return width;
+                width = w;
+                return chart;
+            };
+            chart.height = function(h) {
+                if (!arguments.length) return height;
+                height = h;
+                return chart;
+            };
+            chart.r = function(r) {
+                if (!arguments.length) return r;
+                r = r;
+                return chart;
+            };
+            chart.nodes = function(n) {
+                if (!arguments.length) return node;
+                node = n;
+                return chart;
+            };
+
+            return chart;
+        }
+
+        var chart = pack();
+
+        d3.json("../../Data/yixPack.json", function(nodes) {
+            chart.nodes(nodes).render();
+        });
+    </script>
+</body>
+
+</html>

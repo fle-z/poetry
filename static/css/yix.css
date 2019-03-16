@@ -1,0 +1,11 @@
+rect {
+    fill: #333;
+    cursor: pointer;
+}
+
+text {
+    font-family: "Arial Black", Gadget, sans-serif;
+    fill: #ddd;
+    font-weight: bold;
+    font-size: 14px
+}

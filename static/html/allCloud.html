@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>wordCloud</title>
+    <link type="text/css" rel="stylesheet" href="../bootstrap/css/bootstrap.min.css" />
+    <script src="../../jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="../bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript" src="../js/d3.layout.cloud.js"></script>
+</head>
+
+<body>
+    <div style="padding: 10px 10px 10px;">
+        <div class="bs-example bs-example-form" role="form">
+            <div class="row">
+                <div class="col-xs-4">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                                <input type="radio" name="data" id="quantangshi" value="quantangshi" checked> 唐诗
+                                &nbsp
+                                <input type="radio" name="data" id="quansongci" value="quansongci">宋词
+					</span>
+                        <input type="text" id="author" name="author" class="form-control"></input>
+                    </div>
+                    <!-- /input-group -->
+                </div>
+                <!-- /.col-lg-6 --><br>
+            </div>
+            <!-- /.row -->
+        </div>
+    </div>
+    <script>
+        var fso;
+        try {
+            fso = new ActiveXObject("Scripting.FileSystemObject");
+        } catch (e) {
+            alert("当前浏览器不支持");
+            return;
+        }
+        <!-- 获取fso -->
+        var file = fso.OpenTextFile("1.txt");
+        <!-- 读取一行内容 -->
+        var str1 = file.ReadLine();
+        <!-- 读取全部内容 -->
+        var str2 = file.ReadAll();
+
+        var data;
+
+
+        //将object对象存为数组
+        var yix = [];
+        var times = [];
+        for (var key in data) {
+            yix.push(key);
+            times.push(data[key]);
+        }
+
+        var fill = d3.scale.category20();
+
+        var scale = d3.scale.linear();
+        scale.domain([0, d3.max(times)])
+            .range([0, 100]);
+
+        var layout = d3.layout.cloud()
+            .size([800, 500])
+            .words(yix.map(function(d, i) {
+                return {
+                    text: d,
+                    size: scale(times[i])
+                };
+            }))
+            .padding(5)
+            .rotate(function() {
+                return (~~(Math.random() * 6) - 3) * 30;
+            })
+            .font("Impact")
+            .fontSize(function(d) {
+                return d.size;
+            })
+            .on("end", draw);
+
+        layout.start();
+
+        function draw(words) {
+            $("body svg").remove();
+            d3.select("body").append("svg")
+                .attr("width", layout.size()[0])
+                .attr("height", layout.size()[1])
+                .attr("class", "wordCloud")
+                .append("g")
+                .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+                .selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .style("font-size", function(d) {
+                    return d.size + "px";
+                })
+                .style("font-family", "Impact")
+                .style("fill", function(d, i) {
+                    return fill(i);
+                })
+                .attr("text-anchor", "middle")
+                .attr("transform", function(d) {
+                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) {
+                    return d.text;
+                });
+            // d3.select(".wordCloud").moveToFront();
+        }
+    </script>
+</body>

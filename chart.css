@@ -1,0 +1,63 @@
+html, body {
+    height: 100%;
+    font-family: "Trebuchet MS", "Open Sans", Segoe UI light, Verdana, Tahoma, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+}
+
+#chart {
+    height: 99%;
+    float: left;
+    position: absolute;
+    width: -moz-calc(80% - 45px);
+    width: -webkit-calc(80% - 45px);
+    width: calc(80% - 45px);
+}
+
+.node rect {
+    cursor: move;
+    fill-opacity: .9;
+    shape-rendering: crispEdges;
+}
+
+.node text {
+    pointer-events: none;
+    text-shadow: 1px 1px 2px #fff;
+    font-size: 0.8em;
+    font-family: sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #000;
+    stroke-opacity: .3;
+}
+
+.link:hover {
+    stroke-opacity: .5;
+}
+
+#titlebar {
+    width: -moz-calc(80% - 90px);
+    width: -webkit-calc(80% - 90px);
+    width: calc(80% - 90px);
+    height: 30px;
+    border-bottom: solid;
+    border-color: #EEE;
+    padding-bottom: 5px;
+    margin-left: 40px;
+    margin-top: 5px;
+    position: fixed;
+    z-index: 50;
+}
+
+.pagetitle {
+    height: 30px;
+    color: #F60;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    font-weight: bold;
+    font-style: oblique
+}

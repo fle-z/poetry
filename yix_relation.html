@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>Yixiang Relation Network</title>
+    <script src="jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <style>
+        .content {
+            float: left;
+            ;
+        }
+
+        .radio {
+            height: 200px;
+            width: 100%;
+            margin: 10px;
+            /*设置元素跟其他元素的距离为20像素*/
+            float: left;
+            /*设置浮动，实现多列效果，div+Css布局中很重要的*/
+        }
+
+        .color {
+            margin: 30px;
+            float: right;
+        }
+
+        .circle {
+            margin: 10px;
+            width: 200px;
+            height: 30px;
+            line-height: 30px;
+            color: #FFFFFF;
+        }
+
+        .link {
+            fill: none;
+            stroke: black;
+            stroke-opacity: .5;
+            stroke-width: 8px;
+        }
+    </style>
+    <script type="text/javascript">
+        function disp(width) {
+            var line = document.getElementsByTagName("line");
+
+            for (i = 0; i < line.length; ++i) {
+                if (width == 0) {
+                    line[i].style.visibility = 'visible';
+                } else {
+                    if (line[i].style['stroke-width'] < 5 * width) {
+                        line[i].style.visibility = 'hidden';
+                    } else {
+                        line[i].style.visibility = 'visible';
+                    }
+                }
+            }
+        }
+
+        function checks() {
+            var radios = document.getElementsByName("radio");
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].checked == true) {
+                    return i;
+                }
+            }
+        }
+
+
+        function change() {
+            var radio = checks();
+            switch (radio) {
+                case 1:
+                    disp(1);
+                    break;
+                case 2:
+                    disp(2);
+                    break;
+                case 3:
+                    disp(3);
+                    break;
+                case 4:
+                    disp(4);
+                    break;
+                case 5:
+                    disp(5);
+                    break;
+                case 6:
+                    disp(6);
+                    break;
+                case 7:
+                    disp(7);
+                    break;
+                default:
+                    disp(0);
+            }
+        }
+
+
+        function display(e) {
+            var id = e.getAttribute("id");
+            //console.log(id);
+            var line = document.getElementsByTagName("line");
+            //console.log(line[13].getAttribute("source"));
+            for (i = 0; i < line.length; ++i) {
+                if (line[i].getAttribute("source") == id || line[i].getAttribute("target") == id) {
+                    line[i].style.visibility = 'visible';
+                } else {
+                    line[i].style.visibility = 'hidden';
+                }
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+    <div class="content"></div>
+    <div class="radio">
+        <fieldset>
+            <legend>Weight:</legend>
+            <input type='radio' value='0' name='radio' onchange="change()" checked='checked'>All the Line
+            <input type='radio' value='1' name='radio' onchange="change()">Weight = 1
+            <input type='radio' value='2' name='radio' onchange="change()">Weight = 2
+            <input type='radio' value='3' name='radio' onchange="change()">Weight = 3
+            <input type='radio' value='4' name='radio' onchange="change()">Weight = 4
+            <input type='radio' value='5' name='radio' onchange="change()">Weight = 5
+            <input type='radio' value='6' name='radio' onchange="change()">Weight = 6
+            <input type='radio' value='7' name='radio' onchange="change()">Weight = 7
+        </fieldset>
+    </div>
+
+    <script>
+        var width = 800,
+            height = 600;
+        var color = d3.scale.category20();
+        var radius = d3.scale.sqrt().range([0, 60]);
+
+        var svg = d3.select(".content")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        //导入数据文件
+        d3.json("Data/yix_relation.json", function(edge) {
+            d3.json("Data/nodes.json", function(graph) {
+                var nodes = [];
+                var edges = [];
+                for (i = 0; i < 47; i++) {
+                    nodes.push({
+                        id: i,
+                        name: graph[i].name
+                    });
+                }
+                for (i = 0; i < edge.length - 1; i++) {
+                    edges.push({
+                        source: edge[i].source,
+                        target: edge[i].target,
+                        weight: edge[i].weight
+                    });
+                }
+                // nodes = JSON.stringify(nodes);
+                // edges = JSON.stringify(edges);
+                // console.log(nodes);
+                // console.log(edges);
+                edges.forEach(function(link, index, list) {
+                    if (typeof nodes[link.source] === 'undefined') {
+                        console.log('undefined source', link);
+                    }
+                    if (typeof nodes[link.target] === 'undefined') {
+                        console.log('undefined target', link);
+                    }
+                });
+
+                weight_limit = 10;
+                var line_width = d3.scale.linear().domain([weight_limit, 300]).range([0.1, 5]);
+
+                var force = d3.layout.force()
+                    .nodes(nodes) //指定节点数组
+                    .links(edges) //指定连线数组
+                    .charge([-300]) //相互之间的作用力
+                    .size([width, height]) //指定作用域范围
+                    .linkDistance(300);
+
+                force.start(); //开始作用
+
+                var bundle = d3.layout.bundle();
+                edges = bundle(edges);
+                
+                var line = d3.svg.line.radial()
+                    .interpolate("bundle")
+                    .tension(.85)
+                    .radius(function(d) {
+                        return d.y;
+                    })
+                    .angle(function(d) {
+                        return d.x / 180 * Math.PI;
+                    });
+
+                //添加连线
+                var svg_edges = svg.selectAll("line")
+                    .data(edges)
+                    .enter()
+                    .append("path")
+                    .attr("class", "link")
+                    .attr("d", line)
+                    .attr("source", function(d) {
+                        return d.source.id;
+                    })
+                    .attr("target", function(d) {
+                        return d.target.id;
+                    })
+                    .style("visibility", "visible");
+
+
+                //添加节点
+                var svg_nodes = svg.selectAll("circle")
+                    .data(nodes)
+                    .enter()
+                    .append("circle")
+                    .attr("r", function(d) {
+                        return 10;
+                    })
+                    .attr("id", function(d) {
+                        return d.id;
+                    })
+                    .attr("onclick", "display(this)")
+                    .style("fill", function(d, i) {
+                        return color(i);
+                    })
+                    .call(force.drag); //使得节点能够拖动
+
+                //添加描述节点的文字
+                var svg_texts = svg.selectAll("text")
+                    .data(nodes)
+                    .enter()
+                    .append("text")
+                    .style("fill", "black")
+                    .attr("dx", 20)
+                    .attr("dy", 8)
+                    .text(function(d) {
+                        return d.name;
+                    });
+                force.on("tick", function() { //对于每一个时间间隔
+                    //更新连线坐标
+                    svg_edges.attr("x1", function(d) {
+                            return d.source.x;
+                        })
+                        .attr("y1", function(d) {
+                            return d.source.y;
+                        })
+                        .attr("x2", function(d) {
+                            return d.target.x;
+                        })
+                        .attr("y2", function(d) {
+                            return d.target.y;
+                        });
+
+                    //更新节点坐标
+                    svg_nodes.attr("cx", function(d) {
+                            return d.x;
+                        })
+                        .attr("cy", function(d) {
+                            return d.y;
+                        });
+
+                    //更新文字坐标
+                    svg_texts.attr("x", function(d) {
+                            return d.x;
+                        })
+                        .attr("y", function(d) {
+                            return d.y;
+                        });
+                });
+            });
+        });
+    </script>
+</body>

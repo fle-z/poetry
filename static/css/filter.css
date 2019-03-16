@@ -1,0 +1,38 @@
+.likeform {
+    height: auto;
+    border-radius: 0;
+    padding: 5px 10px;
+    overflow: auto;
+}
+
+.tagit {
+    float: left;
+}
+
+.tagit-choice {
+    float: left;
+    font-size: 8px;
+    color: #fff;
+    margin-right: 4px;
+    margin-bottom: 3px;
+    padding: 2px 5px;
+    position: relative;
+    line-height: inherit;
+    background-size: 20px 20px;
+    cursor: pointer;
+    border-width: 1px;
+    border-color: #ddd;
+    border-style: solid;
+    border-radius: 3px;
+}
+
+.active{
+    color: #000;
+    background-color: #fff;
+    border-color: #fff;
+}
+
+input[type="checkbox"]+label{
+    margin: 5px;
+    color:#ddd;
+}

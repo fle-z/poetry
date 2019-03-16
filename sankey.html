@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset="utf-8">
+    <title>诗歌主题与意象的关系</title>
+    <link rel="stylesheet" type="text/css" href="chart.css" />
+    <link rel="stylesheet" type="text/css" href="controll.css" />
+    <style>
+        #select1,
+        #select2,
+        #select3 {
+            height: 25px;
+            width: 135px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            float: left;
+        }
+
+        .likeform {
+            margin-top: 20px;
+            height: auto;
+            border: 1px solid #d9d9d9;
+            border-radius: 0;
+            padding: 5px 10px;
+            overflow: auto;
+        }
+
+        .tagit {
+            float: left;
+        }
+
+        .tagit-choice {
+            float: left;
+            font-size: 8px;
+            color: #000;
+            margin-right: 4px;
+            margin-bottom: 3px;
+            padding-right: 18px;
+            padding-left: 5px;
+            position: relative;
+            line-height: inherit;
+            background: url(icon_close.png) scroll right center no-repeat transparent;
+            background-size: 20px 20px;
+            opacity: 0.6;
+            cursor: pointer;
+            border-width: 1px;
+            border-color: #dddddd;
+            border-style: solid;
+            border-radius: 3px;
+            background-color: #f7f7f7;
+        }
+
+        #goodcover {
+            display: none;
+            position: relative;
+            top: 0%;
+            left: 0%;
+            width: 100%;
+            height: 133%;
+            background-color: black;
+            z-index: 1001;
+            -moz-opacity: 0.8;
+            opacity: 0.50;
+            filter: alpha(opacity=80);
+        }
+
+        #code {
+            width: 500px;
+            height:500px;
+            background-color: #fff;
+            padding: 10px;
+            position: absolute;
+            display: none;
+            left: 45%;
+            z-index: 1002;
+        }
+
+        .close1 {
+            width: 500px;
+            height: 60px;
+        }
+
+        #closebt {
+            float: right;
+        }
+
+        #closebt img {
+            width: 20px;
+        }
+
+        .pie_chart {
+            text-align: center;
+        }
+
+        .pie_chart p {
+            height: 30px;
+            line-height: 30px;
+            font-size: 16px;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .arc text {
+          font: 10px sans-serif;
+          text-anchor: middle;
+        }
+
+        .arc path {
+          stroke: #fff;
+        }
+    </style>
+</head>
+
+<body onload="checksize();">
+
+    <!--TITLELBAR-->
+
+    <div id="titlebar">
+        <span id="titletext" class="pagetitle">诗词主题意象分析</span>
+    </div>
+
+    <!--PAGE WRAPPER-->
+
+    <div id="content" style="opacity:1;">
+
+        <!--SANKEY DIAGRAM CONTROLS-->
+
+        <div id="sourcecontrol" style="float:right; margin-right:10px; width:20%; margin-top:10px padding:30px; border-left:solid; border-color:#EEE; height:98%; padding-left:20px;line-height:26px;z-index:600000;">
+            <div style="display:block; white-space: nowrap;">
+                <select id="select1"></select>
+                <div style="display:block;overflow: hidden;white-space: nowrap;">
+                    <span><button onclick="addTheme()" class="btn">添加主题</button></span>
+                </div>
+                <div class="likeform" id="nodes-form">
+                    <div id="theme" class="tagit">
+                        <div class="tagit-choice">春天</div>
+                        <div class="tagit-choice">夏天</div>
+                        <div class="tagit-choice">秋天</div>
+                        <div class="tagit-choice">冬天</div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:block; white-space: nowrap;">
+                <select id="select2"></select>
+                <div style="display:block;overflow: hidden;white-space: nowrap;">
+                    <span><button onclick="addAuthor()" class="btn">添加诗人</button></span>
+                </div>
+                <div class="likeform" id="nodes-form">
+                    <div id="author" class="tagit">
+                        <div class="tagit-choice">
+                            <span class="tagit-label">李白</span>
+                        </div>
+                        <div class="tagit-choice">
+                            <span class="tagit-label">杜甫</span>
+                        </div>
+                        <div class="tagit-choice">
+                            <span class="tagit-label">白居易</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:block; white-space: nowrap;">
+                <select id="select3">
+                    <option value="柳">柳 </option>
+                    <option value="梅">梅 </option>
+                    <option value="兰">兰 </option>
+                    <option value="竹">竹 </option>
+                    <option value="菊">菊 </option>
+                    <option value="松">松柏 </option>
+                    <option value="莲">莲 </option>
+                    <option value="梧桐">梧桐 </option>
+                    <option value="草">草 </option>
+                    <option value="芭蕉">芭蕉 </option>
+                    <option value="红豆">红豆 </option>
+                    <option value="豆蔻">豆蔻 </option>
+                    <option value="丁香">丁香 </option>
+                    <option value="牡丹">牡丹 </option>
+                    <option value="蝉">蝉 </option>
+                    <option value="杜鹃">杜鹃 </option>
+                    <option value="鹧鸪">鹧鸪 </option>
+                    <option value="雁">鸿雁 </option>
+                    <option value="鸦">乌鸦 </option>
+                    <option value="青鸟">青鸟 </option>
+                    <option value="猿">猿啼 </option>
+                    <option value="飞鸟">飞鸟 </option>
+                    <option value="鱼">鱼 </option>
+                    <option value="狗|鸡">狗、鸡 </option>
+                    <option value="马">马 </option>
+                    <option value="月">月亮 </option>
+                    <option value="夕阳">夕阳 </option>
+                    <option value="水">水 </option>
+                    <option value="冰">冰雪 </option>
+                    <option value="烟">烟雾 </option>
+                    <option value="风">西风 </option>
+                    <option value="霜">霜 </option>
+                    <option value="露">露 </option>
+                    <option value="云">云 </option>
+                    <option value="阴">阴 </option>
+                    <option value="晴">晴 </option>
+                    <option value="雨">雨 </option>
+                    <option value="酒">酒 </option>
+                    <option value="船">船 </option>
+                    <option value="笛">笛声 </option>
+                    <option value="吴钩">吴钩 </option>
+                    <option value="灯">灯 </option>
+                    <option value="砧">捣衣砧 </option>
+                    <option value="长亭">长亭 </option>
+                    <option value="西楼">西楼、小楼 </option>
+                    <option value="栏杆">栏杆 </option>
+                    <option value="灞陵">灞陵 </option>
+                    <option value="镜">镜 </option>
+                </select>
+                <div style="display:block;overflow: hidden;white-space: nowrap;">
+                    <span><button onclick="addYix()" class="btn">添加意象</button></span>
+                </div>
+                <div class="likeform" id="nodes-form">
+                    <div id="yix" class="tagit">
+                        <div class="tagit-choice">
+                            <span class="tagit-label">柳</span>
+                        </div>
+                        <div class="tagit-choice">
+                            <span class="tagit-label">兰</span>
+                        </div>
+                        <div class="tagit-choice">
+                            <span class="tagit-label">竹</span>
+                        </div>
+                        <div class="tagit-choice">
+                            <span class="tagit-label">菊</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button onclick="draw()" style="width:100%; margin-bottom:20px; margin-top:20px;font-size:20px;">Draw Sankey</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chart"></div>
+    <div id="goodcover"></div>
+
+    <div id="code">
+      <div class="close1"><a href="javascript:void(0)" id="closebt"><img src="icon_close.png"></a></div>
+      <div class="pie_chart"></div>
+    </div>
+
+    <script src="jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script>
+    <script type="text/javascript" src="sankey.js"></script>
+    <script type="text/javascript" src="chart.js"></script>
+    <script type="text/javascript" src="controll.js"></script>
+    <script>
+        var sizecorrection = Math.max(0, 220 - parseInt(window.innerWidth * 0.2));
+
+        function checksize() {
+            if ((window.innerWidth < 600) || (window.innerHeight < 300)) {
+                alert("The recommended minimum resolution is 600 x 300.\n Yours is " + window.innerWidth + " x " + window.innerHeight + ".");
+            }
+            setTimeout(function() {
+                d3.select("#chart").transition().style("opacity", 1);
+            }, 3000);
+        }
+        window.onresize = function() {
+            window.location.reload();
+            draw();
+        }
+
+        $(function() {
+            $.ajax({
+                url: "http://127.168.0.1/poetry/Experiment/get_item.php/emotion",
+                type: 'post',
+                data: {
+                    "item": "emotion"
+                },
+                async: false,
+                success: function(data) { //成功后的函数，注意，这里接受php返回的参数!!!
+                    $.each(JSON.parse(data), function(idx, obj) {
+                        $("#select1").append("<option value=" + obj.emotion + ">" + obj.emotion + " </option>");
+                    });
+                },
+                error: function() { //出错处理
+                    alert('主题列表获取失败');
+                }
+            });
+
+            $.ajax({
+                url: "http://127.168.0.1/poetry/Experiment/get_item.php/author",
+                type: 'post',
+                data: {
+                    "item": "author"
+                },
+                async: false,
+                success: function(data) { //成功后的函数，注意，这里接受php返回的参数!!!
+                    $.each(JSON.parse(data), function(idx, obj) {
+                        $("#select2").append("<option value=" + obj.author + ">" + obj.author + " </option>");
+                    });
+                },
+                error: function() { //出错处理
+                    alert('诗人列表获取失败');
+                }
+            });
+        });
+    </script>
+
+    </div>
+</body>

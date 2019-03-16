@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link type="text/css" rel="stylesheet" href="../css/pie.css" />
+<style>
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 960px;
+        height: 500px;
+        position: relative;
+    }
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    path.slice {
+        stroke-width: 2px;
+    }
+
+    polyline {
+        opacity: .3;
+        stroke: black;
+        stroke-width: 2px;
+        fill: none;
+    }
+</style>
+
+<body>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+        var chartRadius = 250;
+        var svg = d3.select("body")
+            .append("svg")
+            .append("g")
+
+        svg.append("g")
+            .attr("class", "slices");
+        svg.append("g")
+            .attr("class", "labels");
+        svg.append("g")
+            .attr("class", "lines");
+        svg.append('g')
+            .attr("class", "circles")
+            .attr({
+                transform: 'translate(' + [-chartRadius, -chartRadius] + ')'
+            });
+        svg.append('g')
+            .attr("class", "links")
+            .attr({
+                transform: 'translate(' + [-chartRadius, -chartRadius] + ')'
+            });
+        svg.append('g')
+            .attr("class", "dimensions")
+            .attr({
+                transform: 'translate(' + [-chartRadius, -chartRadius] + ')'
+            });
+
+
+        var width = 960,
+            height = 450,
+            radius = Math.min(width, height) / 2;
+
+        var pie = d3.layout.pie()
+            .sort(null)
+            .value(function(d) {
+                return d.value;
+            });
+
+        var arc = d3.svg.arc()
+            .outerRadius(radius * 0.8)
+            .innerRadius(radius * 0.7);
+
+        var outerArc = d3.svg.arc()
+            .innerRadius(radius * 0.9)
+            .outerRadius(radius * 0.9);
+
+        svg.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        var key = function(d) {
+            return d.data.emotion;
+        };
+
+        var color = d3.scale.category20();
+
+        function getDimension() {
+            var data;
+            $.ajax({
+                url: "http://127.168.0.1/poetry/Experiment/getEmotionNum.php",
+                type: 'post',
+                dataType: 'json',
+                async: false,
+                success: function(result) {
+                    data = result;
+                },
+                error: function() { //出错处理
+                    alert('数据获取失败');
+                }
+            });
+
+            return data;
+        }
+        var dimension = getDimension();
+        render(dimension);
+
+        var clickedNode = "";
+
+        function render(data, clickedNode) {
+            var theta = []; //每个维度的中心点的坐标
+            /* ------- PIE SLICES -------*/
+            var slice = svg.select(".slices").selectAll("path.slice")
+                .data(pie(data), key);
+
+            slice.enter()
+                .insert("path")
+                .style("fill", function(d, i) {
+                    return color(i);
+                })
+                .attr("class", "slice")
+                .on("click", function(d){
+                    d3.select(this).classed("activeSlice", true);
+                    exchangeDimension(d.data, dimension);
+                });
+
+            slice
+                .transition().duration(500)
+                .attrTween("d", function(d) {
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        return arc(interpolate(t));
+                    };
+                })
+
+            slice.exit()
+                .remove();
+
+            /* ------- TEXT LABELS -------*/
+
+            var text = svg.select(".labels").selectAll("text")
+                .data(pie(data), key);
+
+            text.enter()
+                .append("text")
+                .attr("dy", ".35em")
+                .text(function(d) {
+                    return d.data.emotion;
+                });
+
+            function midAngle(d) {
+                return d.startAngle + (d.endAngle - d.startAngle) / 2;
+            }
+
+            text.transition().duration(500)
+                .attrTween("transform", function(d) {
+                    this._current = this._current || d;
+                    //获取每段圆弧的中间点
+                    var emotion = d.data.emotion;
+                    theta.push({
+                        'name': emotion,
+                        'angle': midAngle(d)
+                    });
+
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        var pos = outerArc.centroid(d2); //arc.centroid(d) 能算出弧线的中心
+                        pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+                        return "translate(" + pos + ")";
+                    };
+                })
+                .styleTween("text-anchor", function(d) {
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        return midAngle(d2) < Math.PI ? "start" : "end";
+                    };
+                });
+
+            text.exit()
+                .remove();
+
+            /* ------- SLICE TO TEXT POLYLINES -------*/
+
+            var polyline = svg.select(".lines").selectAll("polyline")
+                .data(pie(data), key);
+
+            polyline.enter()
+                .append("polyline");
+
+            polyline.transition().duration(500)
+                .attrTween("points", function(d) {
+                    this._current = this._current || d;
+                    var interpolate = d3.interpolate(this._current, d);
+                    this._current = interpolate(0);
+                    return function(t) {
+                        var d2 = interpolate(t);
+                        var pos = outerArc.centroid(d2);
+                        pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+                        return [arc.centroid(d2), outerArc.centroid(d2), pos];
+                    };
+                });
+
+            polyline.exit()
+                .remove();
+
+            renderForce(theta, clickedNode);
+        };
+
+        function renderForce(theta, clickedNode) {
+            console.log(clickedNode);
+            var zoomFactor = 0.68;
+
+            var dataFilter = function(data) {
+                var dataChange = [];
+                var n = 0;
+                data.forEach(function(d) {
+                    var tmp = {};
+                    var size = 0;
+                    var record = 0;
+                    theta.forEach(function(dimension) {
+                        var emotion = dimension.name;
+                        if (d[emotion]) {
+                            tmp[emotion] = d[emotion];
+                            size += d[emotion];
+                            record = 1;
+                        }
+                    });
+                    if (record == 1) {
+                        tmp['name'] = d['name'];
+                        tmp['class'] = d['class'];
+                        tmp['size'] = size;
+                        dataChange.push(tmp);
+                    }
+                });
+
+                return dataChange;
+            }
+
+            /**标准化的方法，原来的 radviz方法 基于径向坐标系，
+             * 所以标准化是将每个坐标上的最大最小值映射到【0,1】上
+             *
+             * 在本例中是对每个球的不同坐标上的值标准化
+             *
+             * 选取不同的标准化尺度也对结果有很大影响，是【0， max】到【0， 1】还是【min， max】到【0.01/0.1， 1】
+             */
+            var addNormalizedValuesBy = function(data) {
+                data.forEach(function(d, i) {
+                    var max = 0,
+                        min = 500;
+                    for (var item in d) {
+                        if (item != "class" && item != "name" && item != "size") {
+                            if (d[item] > max) {
+                                max = d[item];
+                            }
+                            if (d[item] < min) {
+                                min = d[item];
+                            }
+                        }
+                    }
+
+                    var normalizationScales = d3.scale.linear().domain([0, max]).range([0, 1]);
+                    for (var item in d) {
+                        if (item != "class" && item != "name" && item != "size") {
+                            d[item + '_normalized'] = normalizationScales(d[item]);
+                        }
+                    }
+                });
+                return data;
+            }
+
+            var addNormalizedValues = function(data) {
+                data.forEach(function(d) {
+                    theta.forEach(function(dimension) {
+                        var emotion = dimension.name;
+                        if (d[emotion])
+                            d[emotion] = +d[emotion];
+                    });
+                });
+
+                var normalizationScales = {};
+                theta.forEach(function(dimension) {
+                    var emotion = dimension.name;
+                    normalizationScales[emotion] = d3.scale.linear().domain(d3.extent(data.map(function(d, i) {
+                        return d[emotion];
+                    }))).range([0, 1]);
+                })
+
+                data.forEach(function(d) {
+                    theta.forEach(function(dimension) {
+                        var emotion = dimension.name;
+                        if (d[emotion])
+                            d[emotion + '_normalized'] = normalizationScales[emotion](d[emotion]);
+                    });
+                });
+
+                return data;
+            }
+
+            var force = d3.layout.force()
+                .chargeDistance(20)
+                .charge(-30)
+                .friction(0.5)
+                .size([2 * chartRadius, 2 * chartRadius]);
+
+            d3.json('../../Data/yixPie.json', function(error, data) {
+                var nodeSize = d3.scale.linear().domain([3, 40]).range([4, 8]);
+
+                data = dataFilter(data);//针对图中存在的维度，去除数据中不存在的维度
+                var nodeCount = data.length;
+                console.log(nodeCount);
+                data = addNormalizedValuesBy(data);
+                // data = addNormalizedValues(data);
+                var normalizeSuffix = '_normalized';
+                var dimensionNamesNormalized = theta.map(function(d) {
+                    return d.name + normalizeSuffix;
+                });
+
+                var dimensionNodes = theta.map(function(d, i) {
+                    var x = chartRadius + Math.cos(d.angle - Math.PI / 2) * chartRadius * zoomFactor;
+                    var y = chartRadius + Math.sin(d.angle - Math.PI / 2) * chartRadius * zoomFactor;
+                    return {
+                        index: nodeCount + i,
+                        x: x,
+                        y: y,
+                        fixed: true,
+                        name: d.name
+                    };
+                });
+
+                var linksData = [];
+                data.forEach(function(d, i) {
+                    dimensionNamesNormalized.forEach(function(dB, iB) {
+                        if (d[dB]) {
+                            linksData.push({
+                                source: i,
+                                target: nodeCount + iB,
+                                value: d[dB]
+                            });
+                        }
+                    });
+                });
+
+                force.linkStrength(function(d) {
+                        return d.value;
+                    })
+                    .nodes(data.concat(dimensionNodes))
+                    .links(linksData)
+                    .start();
+
+
+                // Links
+                if (true) {
+                    d3.selectAll("line.link").remove();
+                    var links = svg.select('.links').selectAll("line.link")
+                        .data(linksData);
+
+                    links.enter()
+                        .append('line')
+                        .classed('link', true)
+                        .style("stroke-width", function(d) {
+                            return d.value * 2;
+                        })
+                        .style("stroke", "silver")
+                        .style("stroke-opacity", 0);
+
+                    if (clickedNode) {
+                        links.style("stroke-opacity", function(o) {
+                            return clickedNode.index == o.source.index | clickedNode.index == o.target.index ? 1 : 0;
+                        });
+                    }
+                }
+
+                //Nodes
+                var circle = svg.select(".circles").selectAll("circle.node")
+                    .data(data);
+
+                circle.enter()
+                    .append("circle")
+                    .attr('class', 'node')
+                    .attr({
+                        r: function(d) {
+                            return nodeSize(d.size);
+                        },
+                        fill: function(d) {
+                            return color(d.name);
+                        }
+                    })
+                    .on('click', function(d) {
+                        getConnection(d, dimensionNodes);
+                    })
+                    .append("title")
+                    .text(function(d) {
+                        return d.name;
+                    });
+
+                // Labels
+                var labelNodes = svg.select(".dimensions").selectAll('circle.label-node')
+                    .data(dimensionNodes);
+
+                labelNodes.enter()
+                    .append('circle')
+                    .classed('label-node', true);
+
+                // Update force
+                force.on('tick', function() {
+                    if (true) {
+                        links.attr({
+                                x1: function(d) {
+                                    return d.source.x;
+                                },
+                                y1: function(d) {
+                                    return d.source.y;
+                                },
+                                x2: function(d) {
+                                    return d.target.x;
+                                },
+                                y2: function(d) {
+                                    return d.target.y;
+                                }
+                            });
+                    }
+
+                    circle.attr({
+                            cx: function(d) {
+                                return d.x;
+                            },
+                            cy: function(d) {
+                                return d.y;
+                            }
+                        });
+
+                    labelNodes.attr({
+                            cx: function(d) {
+                                return d.x;
+                            },
+                            cy: function(d) {
+                                return d.y;
+                            },
+                            r: 4
+                        })
+                });
+
+                circle.exit()
+                    .remove();
+                labelNodes.exit()
+                    .remove();
+            });
+
+        }
+
+        //定义一个比较器
+        function compare(propertyName) {
+            return function(object1, object2) {
+                var value1 = object1[propertyName];
+                var value2 = object2[propertyName];
+                if (value2 < value1) {
+                    return 1;
+                } else if (value2 > value1) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            };
+        }
+
+        var getConnection = function(clickedNode, dimensionNodes) {
+            var dimensionConnected = [];
+            dimensionNodes.forEach(function(d, i) {
+                var tmp = [];
+                if (clickedNode[d.name]) {
+                    tmp.name = d.name;
+                    tmp.size = clickedNode[d.name];
+                    dimensionConnected.push(tmp);
+                }
+            });
+
+            dimensionConnected.sort(compare('size'));//从小到大排序
+
+            dimensionConnected.forEach(function(o, j){
+                dimension.forEach(function(d, i){
+                    if(d.emotion == o.name){
+                        var tmp = dimension.splice(i, 1);
+                        if(j % 2 === 0){
+                            dimension.unshift(tmp[0]);
+                        }else{
+                            dimension.push(tmp[0]);
+                        }
+                    }
+                });
+            });
+
+            render(dimension, clickedNode);
+        };
+
+        var exchange = [];//将要交换的两个主题维度
+        var exchangeDimension = function(data, dimensionNodes){
+            exchange.push(data);
+            //console.log(data);
+            if(exchange.length == 2){
+                var dimension = dimensionNodes;
+                dimension.forEach(function(d, i){
+                    if(d.emotion == exchange[0].emotion){
+                        dimension.forEach(function(o, j){
+                            if(o.emotion == exchange[1].emotion){
+                                var tmp = dimensionNodes[i];
+                                dimensionNodes[i] = dimensionNodes[j];
+                                dimensionNodes[j] = tmp;
+                            }
+                        });
+                    }
+                });
+                exchange = [];
+                render(dimensionNodes);
+            }
+        };
+
+    </script>
+</body>

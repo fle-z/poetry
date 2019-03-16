@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>A web demo for ltp api (jquery)</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js">
+    </script>
+    <script>
+    // function myrefresh()
+    // {
+    //    window.location.reload();
+    // }
+    // setTimeout('myrefresh()',1000*30); //指定1秒刷新一次
+
+        function getText() {
+            var result = "";
+            $.ajax({
+                url: "http://127.168.0.1/poetry/Experiment/getText.php",
+                type: 'post',
+                dataType: 'json',
+                async: false,
+                success: function(data) { //成功后的函数，注意，这里接受php返回的参数!!!!
+                    //console.log(data);
+                    result = data;
+                },
+                error: function() { //出错处理
+                    alert('数据获取失败');
+                }
+            });
+            return result;
+        }
+
+        $(function() {
+            var poetry = getText();
+            //console.log(poetry);
+            $ .each(poetry, function(i){
+                var id = poetry[i].id;
+                var content = poetry[i].content;
+
+                var base = "https://api.ltp-cloud.com/analysis/?";
+                var api_key = "u9W1u0X43IEdJPDcHRlnpOPbDJVSWQ4KPEVFkihc";
+                var pattern = 'pos';
+                var text = content;
+                var format = "json";
+                var uri = (base +
+                    "api_key=" + api_key + "&text=" + text +
+                    "&pattern=" + pattern + "&format=" + format);
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    dataType: 'jsonp',
+                    url: uri,
+                    success: function(data) {
+                        foo(id, data);
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        alert(XMLHttpRequest.status +
+                            "-" +
+                            XMLHttpRequest.readyState +
+                            "-" +
+                            textStatus);
+                    }
+                });
+            });
+        });
+
+        var foo = function(id, data) {
+            result = JSON.stringify(data, null, " ");
+            $.ajax({
+                url: "http://127.168.0.1/poetry/Experiment/save_word.php",
+                type: 'post',
+                async: false,
+                data: {
+                    "data": result,
+                    "id"  : id
+                },
+                success: function(result) { //成功后的函数，注意，这里接受php返回的参数!!!!
+                    console.log(result);
+                },
+                error: function() { //出错处理
+                    alert('数据存储失败');
+                }
+            });
+        };
+    </script>
+</head>
+
+<body>
+    <div>This example shows how to use javascript to get ltp-cloud api result (jquery).
+    </div>
+
+    <div id="result"></div>
+</body>
+
+</html>

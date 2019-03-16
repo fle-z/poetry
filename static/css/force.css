@@ -1,0 +1,85 @@
+@font-face {
+    font-family: 'Roboto Condensed';
+    font-weight: normal;
+    font-style: normal;
+}
+
+.node {
+  opacity: 0.8;
+}
+
+.node:hover {
+  opacity: 1;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    line-height: 1;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 2px;
+    pointer-events: none;
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+div.pinned {
+    color: #e8941a;
+}
+
+g {
+    font-family: 'Roboto Condensed', sans-serif;
+}
+
+g.cell {
+    cursor: pointer;
+}
+
+g.cell:hover {
+    fill-opacity: 0.4;
+}
+
+g.cell.active:hover {
+    fill-opacity: 1;
+}
+
+g.cell text {
+    fill: white;
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+g.cell.active text {
+    fill: #e8941a;
+}
+
+.legendSize circle {
+    /*        stroke: white;*/
+    fill: #999;
+    fill-opacity: 0.6;
+}
+
+.legendContainer>text {
+    font-size: 30px;
+}
+
+.legendContainer>text:nth-child(2) {
+    font-size: 20px;
+}
+
+.legendContainer {
+    padding: 0;
+}
+
+.activeNode {
+    cursor: pointer;
+}
+
+.baseNode {
+    stroke: #fff;
+    stroke-width: 2px;
+}
